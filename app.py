@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import joblib
 
 # Page settings
 st.set_page_config(
@@ -8,12 +9,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Title
+# Load trained model
+model = joblib.load("model.pkl")
+
 st.title("NASA C-MAPSS Predictive Maintenance Dashboard")
 st.write("Aircraft Engine Remaining Useful Life (RUL) Prediction")
 st.markdown("---")
 
-# Engine Health Summary
+# Dashboard summary
 st.header("Engine Health Summary")
 
 col1, col2, col3 = st.columns(3)
@@ -32,7 +35,7 @@ with col3:
 
 st.markdown("---")
 
-# Health Status
+# Health status
 st.header("Engine Health Status")
 
 health_data = pd.DataFrame({
@@ -46,7 +49,7 @@ st.bar_chart(
 
 st.markdown("---")
 
-# Model Performance
+# Model performance
 st.header("Model Performance")
 
 col1, col2, col3 = st.columns(3)
@@ -62,21 +65,56 @@ with col3:
 
 st.markdown("---")
 
-# RUL Prediction
+# Prediction section
 st.header("RUL Prediction")
 
+st.write("Enter engine operating parameters:")
+
 cycle = st.number_input(
-    "Enter Current Cycle",
-    min_value=1,
-    value=1,
-    step=1
+    "Current Cycle",
+    min_value=1.0,
+    value=1.0
 )
 
-if st.button("Predict RUL"):
-    st.success(f"Current Cycle: {cycle}")
-    st.info(
-        "The Random Forest based RUL prediction system is ready."
+setting_1 = st.number_input("Setting 1", value=0.0)
+setting_2 = st.number_input("Setting 2", value=0.0)
+setting_3 = st.number_input("Setting 3", value=0.0)
+
+st.subheader("Sensor Values")
+
+sensor_values = []
+
+for i in [2, 3, 4, 7, 8, 9, 11, 12, 13, 14, 15, 17, 20, 21]:
+    value = st.number_input(
+        f"Sensor {i}",
+        value=0.0
     )
+    sensor_values.append(value)
+
+if st.button("Predict RUL"):
+
+    input_data = pd.DataFrame([[
+        cycle,
+        setting_1,
+        setting_2,
+        setting_3,
+        *sensor_values
+    ]])
+
+    prediction = model.predict(input_data)[0]
+
+    prediction = max(0, prediction)
+
+    st.success(
+        f"Predicted Remaining Useful Life: {prediction:.2f} cycles"
+    )
+
+    if prediction <= 30:
+        st.error("Critical: Engine requires immediate attention.")
+    elif prediction <= 60:
+        st.warning("Warning: Engine requires monitoring.")
+    else:
+        st.info("Normal: Engine health is satisfactory.")
 
 st.markdown("---")
 
