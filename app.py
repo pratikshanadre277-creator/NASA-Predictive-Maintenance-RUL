@@ -84,7 +84,7 @@ st.subheader("Sensor Values")
 
 sensor_values = []
 
-for i in [2, 3, 4, 7, 8, 9, 11, 12, 13, 14, 15, 17, 20, 21]:
+for i in [2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15, 17, 20, 21]:
     value = st.number_input(
         f"Sensor {i}",
         value=0.0
